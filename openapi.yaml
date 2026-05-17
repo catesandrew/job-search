@@ -1,0 +1,1777 @@
+openapi: 3.1.0
+info:
+  title: Job Search Dashboard API
+  version: 0.1.0
+  description: REST API for the Job Search + Resume Management Dashboard
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /api/applications:
+    get:
+      operationId: listApplications
+      summary: List applications
+      tags: [Applications]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AppStatus'
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Application'
+    post:
+      operationId: createApplication
+      summary: Create application
+      tags: [Applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplication'
+      responses:
+        '201':
+          description: Created application
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/applications/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: getApplication
+      summary: Get application by ID
+      tags: [Applications]
+      responses:
+        '200':
+          description: Application details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Application'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateApplication
+      summary: Update application
+      tags: [Applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApplication'
+      responses:
+        '200':
+          description: Updated application
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteApplication
+      summary: Delete application
+      tags: [Applications]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes:
+    get:
+      operationId: listResumes
+      summary: List resumes
+      tags: [Resumes]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/ResumeType'
+      responses:
+        '200':
+          description: List of resumes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ResumeSummary'
+    post:
+      operationId: createResume
+      summary: Create resume
+      tags: [Resumes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateResume'
+      responses:
+        '201':
+          description: Created resume
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Resume'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/resumes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: getResume
+      summary: Get resume with all nested data
+      tags: [Resumes]
+      responses:
+        '200':
+          description: Full resume
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ResumeDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateResume
+      summary: Update resume
+      tags: [Resumes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateResume'
+      responses:
+        '200':
+          description: Updated resume
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Resume'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteResume
+      summary: Delete resume
+      tags: [Resumes]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/clone:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      operationId: cloneResume
+      summary: Deep-clone a resume as JOB_APPLICATION_OPTIMIZED
+      tags: [Resumes]
+      responses:
+        '201':
+          description: Cloned resume with nested data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ResumeDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/profile:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: getProfile
+      summary: Get resume profile
+      tags: [Resumes]
+      responses:
+        '200':
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: upsertProfile
+      summary: Create or update resume profile
+      tags: [Resumes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileInput'
+      responses:
+        '200':
+          description: Upserted profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/positions:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: listPositions
+      summary: List positions for a resume
+      tags: [Positions]
+      responses:
+        '200':
+          description: Positions with bullets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PositionWithBullets'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createPosition
+      summary: Add position to resume
+      tags: [Positions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PositionInput'
+      responses:
+        '201':
+          description: Created position
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Position'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/positions/{positionId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/PositionId'
+    put:
+      operationId: updatePosition
+      summary: Update position
+      tags: [Positions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePositionInput'
+      responses:
+        '200':
+          description: Updated position
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PositionWithBullets'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deletePosition
+      summary: Delete position
+      tags: [Positions]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/positions/{positionId}/bullets:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/PositionId'
+    get:
+      operationId: listBullets
+      summary: List bullets for a position
+      tags: [Bullets]
+      responses:
+        '200':
+          description: List of bullets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Bullet'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createBullet
+      summary: Add bullet to position
+      tags: [Bullets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulletInput'
+      responses:
+        '201':
+          description: Created bullet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Bullet'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/positions/{positionId}/bullets/{bulletId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/PositionId'
+      - $ref: '#/components/parameters/BulletId'
+    put:
+      operationId: updateBullet
+      summary: Update bullet
+      tags: [Bullets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBulletInput'
+      responses:
+        '200':
+          description: Updated bullet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Bullet'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteBullet
+      summary: Delete bullet
+      tags: [Bullets]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/skills:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: listSkillCategories
+      summary: List skill categories for a resume
+      tags: [Skills]
+      responses:
+        '200':
+          description: List of skill categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SkillCategory'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createSkillCategory
+      summary: Add skill category
+      tags: [Skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillCategoryInput'
+      responses:
+        '201':
+          description: Created skill category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SkillCategory'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/skills/{skillId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/SkillId'
+    put:
+      operationId: updateSkillCategory
+      summary: Update skill category
+      tags: [Skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillCategoryInput'
+      responses:
+        '200':
+          description: Updated skill category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SkillCategory'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteSkillCategory
+      summary: Delete skill category
+      tags: [Skills]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/education:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: listEducation
+      summary: List education entries
+      tags: [Education]
+      responses:
+        '200':
+          description: List of education entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Education'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createEducation
+      summary: Add education entry
+      tags: [Education]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EducationInput'
+      responses:
+        '201':
+          description: Created education
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Education'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/education/{educationId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/EducationId'
+    put:
+      operationId: updateEducation
+      summary: Update education entry
+      tags: [Education]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEducationInput'
+      responses:
+        '200':
+          description: Updated education
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Education'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteEducation
+      summary: Delete education entry
+      tags: [Education]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/projects:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: listProjects
+      summary: List projects
+      tags: [Projects]
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createProject
+      summary: Add project
+      tags: [Projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '201':
+          description: Created project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/resumes/{id}/projects/{projectId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/ProjectId'
+    put:
+      operationId: updateProject
+      summary: Update project
+      tags: [Projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectInput'
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteProject
+      summary: Delete project
+      tags: [Projects]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/tasks:
+    get:
+      operationId: listTasks
+      summary: List tasks
+      tags: [Tasks]
+      parameters:
+        - name: done
+          in: query
+          schema:
+            type: string
+            enum: ['true', 'false']
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+    post:
+      operationId: createTask
+      summary: Create task
+      tags: [Tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTask'
+      responses:
+        '201':
+          description: Created task
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/tasks/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      operationId: updateTask
+      summary: Update task
+      tags: [Tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTask'
+      responses:
+        '200':
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteTask
+      summary: Delete task
+      tags: [Tasks]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/settings:
+    get:
+      operationId: listSettings
+      summary: List all settings
+      tags: [Settings]
+      responses:
+        '200':
+          description: List of settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Setting'
+    post:
+      operationId: upsertSetting
+      summary: Upsert setting by key
+      tags: [Settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertSetting'
+      responses:
+        '201':
+          description: Upserted setting
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Setting'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/settings/{key}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getSetting
+      summary: Get setting by key
+      tags: [Settings]
+      responses:
+        '200':
+          description: Setting value
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Setting'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateSetting
+      summary: Update setting value
+      tags: [Settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSetting'
+      responses:
+        '200':
+          description: Updated setting
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Setting'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteSetting
+      summary: Delete setting
+      tags: [Settings]
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    PositionId:
+      name: positionId
+      in: path
+      required: true
+      schema:
+        type: string
+    BulletId:
+      name: bulletId
+      in: path
+      required: true
+      schema:
+        type: string
+    SkillId:
+      name: skillId
+      in: path
+      required: true
+      schema:
+        type: string
+    EducationId:
+      name: educationId
+      in: path
+      required: true
+      schema:
+        type: string
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: object
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+  schemas:
+    AppStatus:
+      type: string
+      enum: [WISHLIST, APPLIED, INTERVIEWING, OFFER, REJECTED]
+
+    ResumeType:
+      type: string
+      enum: [BASE, JOB_APPLICATION_OPTIMIZED, JOB_TITLE_OPTIMIZED]
+
+    Application:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        company:
+          type: string
+        companyUrl:
+          type: string
+          nullable: true
+        role:
+          type: string
+        location:
+          type: string
+          nullable: true
+        remote:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/AppStatus'
+        salaryMin:
+          type: integer
+          nullable: true
+        salaryMax:
+          type: integer
+          nullable: true
+        salaryFreq:
+          type: string
+          nullable: true
+        jobUrl:
+          type: string
+          nullable: true
+        jobDescription:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        linkedResumeId:
+          type: string
+          nullable: true
+        linkedResume:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateApplication:
+      type: object
+      required: [company, role]
+      properties:
+        company:
+          type: string
+          minLength: 1
+        companyUrl:
+          type: string
+        role:
+          type: string
+          minLength: 1
+        location:
+          type: string
+        remote:
+          type: boolean
+          default: false
+        status:
+          $ref: '#/components/schemas/AppStatus'
+        salaryMin:
+          type: integer
+          nullable: true
+        salaryMax:
+          type: integer
+          nullable: true
+        salaryFreq:
+          type: string
+          nullable: true
+        jobUrl:
+          type: string
+          nullable: true
+        jobDescription:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        linkedResumeId:
+          type: string
+          nullable: true
+
+    UpdateApplication:
+      type: object
+      properties:
+        company:
+          type: string
+        companyUrl:
+          type: string
+        role:
+          type: string
+        location:
+          type: string
+        remote:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/AppStatus'
+        salaryMin:
+          type: integer
+          nullable: true
+        salaryMax:
+          type: integer
+          nullable: true
+        salaryFreq:
+          type: string
+          nullable: true
+        jobUrl:
+          type: string
+          nullable: true
+        jobDescription:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        linkedResumeId:
+          type: string
+          nullable: true
+
+    Resume:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        type:
+          $ref: '#/components/schemas/ResumeType'
+        templateId:
+          type: string
+        fontFamily:
+          type: string
+        fontSize:
+          type: string
+        lineHeight:
+          type: string
+        sectionTitleCasing:
+          type: string
+        dateFormat:
+          type: string
+        marginH:
+          type: string
+        marginV:
+          type: string
+        pageSize:
+          type: string
+        sectionOrder:
+          type: string
+        score:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ResumeSummary:
+      allOf:
+        - $ref: '#/components/schemas/Resume'
+        - type: object
+          properties:
+            profile:
+              $ref: '#/components/schemas/Profile'
+              nullable: true
+            _count:
+              type: object
+              properties:
+                positions:
+                  type: integer
+                skills:
+                  type: integer
+
+    ResumeDetail:
+      allOf:
+        - $ref: '#/components/schemas/Resume'
+        - type: object
+          properties:
+            profile:
+              $ref: '#/components/schemas/Profile'
+              nullable: true
+            positions:
+              type: array
+              items:
+                $ref: '#/components/schemas/PositionWithBullets'
+            skills:
+              type: array
+              items:
+                $ref: '#/components/schemas/SkillCategory'
+            education:
+              type: array
+              items:
+                $ref: '#/components/schemas/Education'
+            projects:
+              type: array
+              items:
+                $ref: '#/components/schemas/Project'
+
+    CreateResume:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        type:
+          $ref: '#/components/schemas/ResumeType'
+        templateId:
+          type: string
+        fontFamily:
+          type: string
+        fontSize:
+          type: string
+        lineHeight:
+          type: string
+        sectionTitleCasing:
+          type: string
+        dateFormat:
+          type: string
+        marginH:
+          type: string
+        marginV:
+          type: string
+        pageSize:
+          type: string
+        sectionOrder:
+          type: string
+
+    UpdateResume:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          $ref: '#/components/schemas/ResumeType'
+        templateId:
+          type: string
+        fontFamily:
+          type: string
+        fontSize:
+          type: string
+        lineHeight:
+          type: string
+        sectionTitleCasing:
+          type: string
+        dateFormat:
+          type: string
+        marginH:
+          type: string
+        marginV:
+          type: string
+        pageSize:
+          type: string
+        sectionOrder:
+          type: string
+        score:
+          type: integer
+          nullable: true
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+        resumeId:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        linkedin:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        targetTitle:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+
+    ProfileInput:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        linkedin:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        targetTitle:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+
+    Position:
+      type: object
+      properties:
+        id:
+          type: string
+        resumeId:
+          type: string
+        company:
+          type: string
+        companyDesc:
+          type: string
+          nullable: true
+        title:
+          type: string
+        location:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+        hidden:
+          type: boolean
+        sortOrder:
+          type: integer
+        sourcePositionId:
+          type: string
+          nullable: true
+
+    PositionWithBullets:
+      allOf:
+        - $ref: '#/components/schemas/Position'
+        - type: object
+          properties:
+            bullets:
+              type: array
+              items:
+                $ref: '#/components/schemas/Bullet'
+
+    PositionInput:
+      type: object
+      required: [company, title, sortOrder]
+      properties:
+        company:
+          type: string
+          minLength: 1
+        companyDesc:
+          type: string
+          nullable: true
+        title:
+          type: string
+          minLength: 1
+        location:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+          default: false
+        hidden:
+          type: boolean
+          default: false
+        sortOrder:
+          type: integer
+        sourcePositionId:
+          type: string
+          nullable: true
+
+    UpdatePositionInput:
+      type: object
+      properties:
+        company:
+          type: string
+        companyDesc:
+          type: string
+          nullable: true
+        title:
+          type: string
+        location:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+        hidden:
+          type: boolean
+        sortOrder:
+          type: integer
+        sourcePositionId:
+          type: string
+          nullable: true
+
+    Bullet:
+      type: object
+      properties:
+        id:
+          type: string
+        positionId:
+          type: string
+        content:
+          type: string
+        hidden:
+          type: boolean
+        sortOrder:
+          type: integer
+        sourceBulletId:
+          type: string
+          nullable: true
+
+    BulletInput:
+      type: object
+      required: [content, sortOrder]
+      properties:
+        content:
+          type: string
+          minLength: 1
+        hidden:
+          type: boolean
+          default: false
+        sortOrder:
+          type: integer
+        sourceBulletId:
+          type: string
+          nullable: true
+
+    UpdateBulletInput:
+      type: object
+      properties:
+        content:
+          type: string
+        hidden:
+          type: boolean
+        sortOrder:
+          type: integer
+        sourceBulletId:
+          type: string
+          nullable: true
+
+    SkillCategory:
+      type: object
+      properties:
+        id:
+          type: string
+        resumeId:
+          type: string
+        name:
+          type: string
+        skills:
+          type: string
+        sortOrder:
+          type: integer
+
+    SkillCategoryInput:
+      type: object
+      required: [name, skills, sortOrder]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        skills:
+          type: string
+          minLength: 1
+        sortOrder:
+          type: integer
+
+    UpdateSkillCategoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+        skills:
+          type: string
+        sortOrder:
+          type: integer
+
+    Education:
+      type: object
+      properties:
+        id:
+          type: string
+        resumeId:
+          type: string
+        institution:
+          type: string
+        degree:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+        achievements:
+          type: string
+          nullable: true
+
+    EducationInput:
+      type: object
+      required: [institution]
+      properties:
+        institution:
+          type: string
+          minLength: 1
+        degree:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+          default: false
+        achievements:
+          type: string
+          nullable: true
+
+    UpdateEducationInput:
+      type: object
+      properties:
+        institution:
+          type: string
+        degree:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+        achievements:
+          type: string
+          nullable: true
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        resumeId:
+          type: string
+        name:
+          type: string
+        link:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+        achievements:
+          type: string
+          nullable: true
+
+    ProjectInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        link:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+          default: false
+        achievements:
+          type: string
+          nullable: true
+
+    UpdateProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+        link:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        current:
+          type: boolean
+        achievements:
+          type: string
+          nullable: true
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        done:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateTask:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        done:
+          type: boolean
+          default: false
+
+    UpdateTask:
+      type: object
+      properties:
+        title:
+          type: string
+        done:
+          type: boolean
+
+    Setting:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        value:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpsertSetting:
+      type: object
+      required: [key, value]
+      properties:
+        key:
+          type: string
+          minLength: 1
+        value:
+          type: string
+
+    UpdateSetting:
+      type: object
+      required: [value]
+      properties:
+        value:
+          type: string

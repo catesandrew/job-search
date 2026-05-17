@@ -1,0 +1,341 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AppStatus {
+  WISHLIST
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
+}
+
+enum ResumeType {
+  BASE
+  JOB_APPLICATION_OPTIMIZED
+  JOB_TITLE_OPTIMIZED
+}
+
+model User {
+  id                     String                 @id @default(cuid())
+  email                  String                 @unique
+  passwordHash           String
+  name                   String
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  applications           Application[]
+  resumes                Resume[]
+  tasks                  Task[]
+  identities             Identity[]
+  repositories           Repository[]
+  coverLetters           CoverLetter[]
+  skillLibraryCategories SkillLibraryCategory[]
+  libraryExperiences     LibraryExperience[]
+  libraryEducations      LibraryEducation[]
+}
+
+model Application {
+  id             String    @id @default(cuid())
+  userId         String
+  company        String
+  companyUrl     String?
+  role           String
+  location       String?
+  remote         Boolean   @default(false)
+  status         AppStatus @default(WISHLIST)
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryFreq     String?
+  jobUrl         String?
+  jobDescription     String?
+  notes              String?
+  linkedResumeId     String?
+  interviewQuestions String  @default("[]")
+  companyInsights    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User          @relation(fields: [userId], references: [id])
+  linkedResume   Resume?       @relation(fields: [linkedResumeId], references: [id])
+  coverLetters   CoverLetter[]
+  interviewPrep  InterviewPrep?
+}
+
+model Identity {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String   @default("Primary")
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  location  String?
+  linkedin  String?
+  website   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  resumes   Resume[]
+}
+
+model Resume {
+  id                  String          @id @default(cuid())
+  userId              String
+  identityId          String?
+  title               String
+  type                ResumeType      @default(BASE)
+  templateId          String          @default("harvard")
+  fontFamily          String          @default("Garamond")
+  fontSize            String          @default("medium")
+  lineHeight          String          @default("standard")
+  sectionTitleCasing  String          @default("capitalized")
+  dateFormat          String          @default("short")
+  marginH             String          @default("standard")
+  marginV             String          @default("standard")
+  pageSize            String          @default("letter")
+  sectionOrder        String          @default("[{\"name\":\"summary\",\"visible\":true},{\"name\":\"skills\",\"visible\":true},{\"name\":\"experience\",\"visible\":true},{\"name\":\"education\",\"visible\":true},{\"name\":\"projects\",\"visible\":true},{\"name\":\"repositories\",\"visible\":true}]")
+  score               Int?
+  factLibrary         String?         // JSON: { facts: [{ id, claim, sourceText, confidence }] }
+  factLibraryAt       DateTime?
+  lastScreenScore     String?         // JSON: { overall, dimensions: {...}, feedback: [...} }
+  lastScreenAt        DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  user                User            @relation(fields: [userId], references: [id])
+  identity            Identity?       @relation(fields: [identityId], references: [id])
+  profile             Profile?
+  positions           Position[]
+  skills              SkillCategory[]
+  education           Education[]
+  projects            Project[]
+  applications        Application[]
+  resumeRepositories  ResumeRepository[]
+  coverLetters        CoverLetter[]
+  tailorRuns          TailorRun[]
+}
+
+model Profile {
+  id          String  @id @default(cuid())
+  resumeId    String  @unique
+  firstName   String
+  lastName    String
+  email       String
+  phone       String?
+  location    String?
+  linkedin    String?
+  website     String?
+  targetTitle String?
+  summary     String?
+  resume      Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+}
+
+model Position {
+  id               String   @id @default(cuid())
+  resumeId         String
+  company          String
+  companyDesc      String?
+  title            String
+  location         String?
+  startDate        String?
+  endDate          String?
+  current          Boolean  @default(false)
+  hidden           Boolean  @default(false)
+  sortOrder        Int
+  sourcePositionId String?
+  resume           Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  bullets          Bullet[]
+}
+
+model Bullet {
+  id             String   @id @default(cuid())
+  positionId     String
+  content        String
+  hidden         Boolean  @default(false)
+  sortOrder      Int
+  sourceBulletId String?
+  position       Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+}
+
+model SkillCategory {
+  id        String @id @default(cuid())
+  resumeId  String
+  name      String
+  skills    String
+  sortOrder Int
+  resume    Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+}
+
+model Education {
+  id                 String            @id @default(cuid())
+  resumeId           String
+  institution        String
+  degree             String?
+  location           String?
+  startDate          String?
+  endDate            String?
+  current            Boolean           @default(false)
+  achievements       String?
+  sortOrder          Int               @default(0)
+  libraryEducationId String?
+  resume             Resume            @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  libraryEducation   LibraryEducation? @relation(fields: [libraryEducationId], references: [id], onDelete: SetNull)
+}
+
+model Project {
+  id           String  @id @default(cuid())
+  resumeId     String
+  name         String
+  link         String?
+  startDate    String?
+  endDate      String?
+  current      Boolean @default(false)
+  achievements String?
+  sortOrder    Int     @default(0)
+  resume       Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Repository {
+  id          String             @id @default(cuid())
+  userId      String
+  githubId    Int
+  name        String
+  fullName    String
+  description String?
+  language    String?
+  stars       Int                @default(0)
+  forks       Int                @default(0)
+  url         String
+  homepage    String?
+  isPrivate   Boolean            @default(false)
+  excluded    Boolean            @default(false)
+  pushedAt    DateTime?
+  fetchedAt   DateTime           @default(now())
+  user        User               @relation(fields: [userId], references: [id])
+  resumeRepos ResumeRepository[]
+
+  @@unique([userId, githubId])
+}
+
+model ResumeRepository {
+  id                  String     @id @default(cuid())
+  resumeId            String
+  repositoryId        String
+  hidden              Boolean    @default(false)
+  nameOverride        String?
+  descriptionOverride String?
+  sortOrder           Int        @default(0)
+  resume              Resume     @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  repository          Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([resumeId, repositoryId])
+}
+
+model InterviewPrep {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  questions     String      // JSON: [{ question, probability, category, starFramework, suggestedAnswer }]
+  generatedAt   DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model CoverLetter {
+  id              String       @id @default(cuid())
+  userId          String
+  title           String
+  content         String
+  outreachMessage String?
+  length          String       @default("medium")
+  tone            String       @default("formal")
+  customPrompt    String?
+  resumeId        String?
+  applicationId   String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User         @relation(fields: [userId], references: [id])
+  resume          Resume?      @relation(fields: [resumeId], references: [id])
+  application     Application? @relation(fields: [applicationId], references: [id])
+}
+
+model SkillLibraryCategory {
+  id        String @id @default(cuid())
+  userId    String
+  name      String
+  skills    String // JSON: ["React", "TypeScript", ...]
+  sortOrder Int    @default(0)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LibraryExperience {
+  id          String          @id @default(cuid())
+  userId      String
+  company     String
+  companyDesc String?
+  title       String
+  location    String?
+  startDate   String?
+  endDate     String?
+  current     Boolean         @default(false)
+  sortOrder   Int             @default(0)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bullets     LibraryBullet[]
+}
+
+model LibraryBullet {
+  id           String            @id @default(cuid())
+  experienceId String
+  content      String
+  sortOrder    Int               @default(0)
+  experience   LibraryExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+}
+
+model LibraryEducation {
+  id           String      @id @default(cuid())
+  userId       String
+  institution  String
+  degree       String?
+  location     String?
+  startDate    String?
+  endDate      String?
+  current      Boolean     @default(false)
+  achievements String?
+  sortOrder    Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  educations   Education[]
+}
+
+model TailorRun {
+  id               String   @id @default(cuid())
+  resumeId         String
+  applicationId    String?
+  company          String?
+  role             String?
+  summaryGenerated Boolean  @default(false)
+  skillCount       Int      @default(0)
+  positionCount    Int      @default(0)
+  repositoryCount  Int      @default(0)
+  tailoredAt       DateTime @default(now())
+  resume           Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+}
