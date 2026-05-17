@@ -4,6 +4,10 @@ export function stripTags(html: string): string {
   return html.replace(/<[^>]+>/g, '').trim()
 }
 
+function escapeUrl(url: string): string {
+  return url.replace(/%/g, '\\%').replace(/#/g, '\\#')
+}
+
 export function htmlToLatex(html: string): string {
   if (!html) return ''
 
@@ -36,7 +40,7 @@ export function htmlToLatex(html: string): string {
       return placeholder(parts.length - 1)
     })
     .replace(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href, inner) => {
-      parts.push(`\\href{${href}}{${escapeLatex(stripTags(inner))}}`)
+      parts.push(`\\href{${escapeUrl(href)}}{${escapeLatex(stripTags(inner))}}`)
       return placeholder(parts.length - 1)
     })
     // Strip remaining tags

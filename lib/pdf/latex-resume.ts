@@ -6,6 +6,10 @@ function e(s: string | null | undefined): string {
   return escapeLatex(s ?? '')
 }
 
+function escapeUrl(url: string): string {
+  return url.replace(/%/g, '\\%').replace(/#/g, '\\#')
+}
+
 function parseSkills(raw: string): string[] {
   try { return JSON.parse(raw) } catch { return raw.split(',').map(s => s.trim()) }
 }
@@ -144,7 +148,7 @@ function renderProjects(projects: NonNullable<Resume['projects']>): string {
   if (!projects.length) return ''
   const items = projects.map(p => {
     const dateStr = formatDateRange(p.startDate, p.endDate, p.current)
-    const linkPart = p.link ? ` --- \\href{${p.link}}{${e(p.link)}}` : ''
+    const linkPart = p.link ? ` --- \\href{${escapeUrl(p.link)}}{${e(p.link)}}` : ''
     return `\\textbf{${e(p.name)}}${linkPart} \\hfill ${dateStr}\\\\
 ${p.achievements ? htmlToLatex(p.achievements) : ''}`
   }).join('\n\\vspace{4pt}\n')
