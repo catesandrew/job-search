@@ -1,0 +1,10 @@
+# Docusaurus build output
+.docusaurus/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# macOS
+.DS_Store
