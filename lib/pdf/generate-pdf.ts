@@ -6,6 +6,8 @@ import { OxfordTemplate } from '@/components/resumes/preview/templates/oxford'
 import { BauhausTemplate } from '@/components/resumes/preview/templates/bauhaus'
 import { ChicagoTemplate } from '@/components/resumes/preview/templates/chicago'
 import { MillerTemplate } from '@/components/resumes/preview/templates/miller'
+import { generateLatexResume } from './latex-resume'
+import { isTectonicAvailable, compileTex } from './tectonic'
 
 function getTemplateElement(resume: Resume): React.ReactElement {
   switch (resume.templateId) {
@@ -19,6 +21,13 @@ function getTemplateElement(resume: Resume): React.ReactElement {
 }
 
 export async function generateResumePdf(resume: Resume): Promise<Buffer> {
+  // Use LaTeX/Tectonic when available (Docker), otherwise fall back to Puppeteer
+  if (await isTectonicAvailable()) {
+    const source = generateLatexResume(resume)
+    return compileTex(source)
+  }
+
+  // Puppeteer fallback (edge / serverless)
   const { renderToStaticMarkup } = await import('react-dom/server')
   const bodyHtml = renderToStaticMarkup(getTemplateElement(resume))
 
