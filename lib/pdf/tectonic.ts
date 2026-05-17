@@ -26,7 +26,6 @@ export async function compileTex(source: string): Promise<Buffer> {
   try {
     await execFileAsync('tectonic', [
       '-X', 'compile',
-      '--engine', 'pdflatex',
       '--outfmt', 'pdf',
       '--outdir', tmpdir(),
       '--untrusted',
