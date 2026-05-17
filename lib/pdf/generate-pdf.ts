@@ -7,6 +7,13 @@ import { BauhausTemplate } from '@/components/resumes/preview/templates/bauhaus'
 import { ChicagoTemplate } from '@/components/resumes/preview/templates/chicago'
 import { MillerTemplate } from '@/components/resumes/preview/templates/miller'
 import { generateLatexResume } from './latex-resume'
+import { generateLatexNeueResume } from './latex-neue'
+import { generateLatexOxfordResume } from './latex-oxford'
+import { generateLatexChicagoResume } from './latex-chicago'
+import { generateLatexMillerResume } from './latex-miller'
+import { generateLatexBauhausResume } from './latex-bauhaus'
+import { generateLatexSlateResume } from './latex-slate'
+import { generateLatexCrispResume } from './latex-crisp'
 import { isTectonicAvailable, compileTex } from './tectonic'
 
 function getTemplateElement(resume: Resume): React.ReactElement {
@@ -23,7 +30,21 @@ function getTemplateElement(resume: Resume): React.ReactElement {
 export async function generateResumePdf(resume: Resume): Promise<Buffer> {
   // Use LaTeX/Tectonic when available (Docker), otherwise fall back to Puppeteer
   if (await isTectonicAvailable()) {
-    const source = generateLatexResume(resume)
+    const source = resume.templateId === 'neue'
+      ? generateLatexNeueResume(resume)
+      : resume.templateId === 'oxford'
+      ? generateLatexOxfordResume(resume)
+      : resume.templateId === 'chicago'
+      ? generateLatexChicagoResume(resume)
+      : resume.templateId === 'miller'
+      ? generateLatexMillerResume(resume)
+      : resume.templateId === 'bauhaus'
+      ? generateLatexBauhausResume(resume)
+      : resume.templateId === 'slate'
+      ? generateLatexSlateResume(resume)
+      : resume.templateId === 'crisp'
+      ? generateLatexCrispResume(resume)
+      : generateLatexResume(resume)
     return compileTex(source)
   }
 

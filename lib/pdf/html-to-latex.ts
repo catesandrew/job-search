@@ -5,6 +5,12 @@ export function stripTags(html: string): string {
   return html.replace(/<[^>]+>/g, '').trim()
 }
 
+export function extractListItems(html: string): string[] | null {
+  const matches = [...html.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)]
+  if (matches.length === 0) return null
+  return matches.map(m => htmlToLatex(m[1])).filter(s => s.length > 0)
+}
+
 export function htmlToLatex(html: string): string {
   if (!html) return ''
 

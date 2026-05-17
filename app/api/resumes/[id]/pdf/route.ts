@@ -29,6 +29,10 @@ export async function GET(
         skills: { orderBy: { sortOrder: 'asc' } },
         education: true,
         projects: true,
+        resumeRepositories: {
+          include: { repository: true },
+          orderBy: { sortOrder: 'asc' },
+        },
       },
     })
 
@@ -138,6 +142,32 @@ export async function GET(
             achievements: e.achievements,
           } as Education)
       ),
+      resumeRepositories: resume.resumeRepositories.map(rr => ({
+        id: rr.id,
+        resumeId: rr.resumeId,
+        repositoryId: rr.repositoryId,
+        hidden: rr.hidden,
+        nameOverride: rr.nameOverride,
+        descriptionOverride: rr.descriptionOverride,
+        sortOrder: rr.sortOrder,
+        repository: {
+          id: rr.repository.id,
+          userId: rr.repository.userId,
+          githubId: rr.repository.githubId,
+          name: rr.repository.name,
+          fullName: rr.repository.fullName,
+          description: rr.repository.description,
+          language: rr.repository.language,
+          stars: rr.repository.stars,
+          forks: rr.repository.forks,
+          url: rr.repository.url,
+          homepage: rr.repository.homepage,
+          isPrivate: rr.repository.isPrivate,
+          excluded: rr.repository.excluded,
+          pushedAt: rr.repository.pushedAt?.toISOString() ?? null,
+          fetchedAt: rr.repository.fetchedAt.toISOString(),
+        },
+      })),
       projects: resume.projects.map(
         (p: DbProj) =>
           ({

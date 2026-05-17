@@ -21,17 +21,26 @@ function formatDateRange(
   return [start, end].filter(Boolean).join(' -- ')
 }
 
-function section(title: string): string {
-  return `\\begin{center}\n  \\textbf{${title}}\n\\end{center}`
+/**
+ * Miller section heading: centered small bold uppercase with wide letter spacing,
+ * followed by a thin light-gray rule below — matching the web template exactly.
+ */
+function millerSection(title: string): string {
+  return [
+    `\\vspace{8pt}`,
+    `{\\centering\\small\\bfseries\\textls[120]{\\MakeUppercase{${e(title)}}}\\par}`,
+    `\\vspace{-6pt}`,
+    `{\\color{millerrule}\\rule{\\linewidth}{0.4pt}}\\par\\vspace{6pt}`,
+  ].join('\n')
 }
 
-const ITEM_LIST = '[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt]'
+const ITEM_LIST = '[leftmargin=1.2em, noitemsep, topsep=2pt, parsep=0pt, partopsep=0pt]'
 
 function itemize(items: string[]): string {
   return `\\begin{itemize}${ITEM_LIST}\n${items.map(i => `  \\item ${i}`).join('\n')}\n\\end{itemize}`
 }
 
-export function generateLatexResume(resume: Resume): string {
+export function generateLatexMillerResume(resume: Resume): string {
   const profile = resume.identity ?? resume.profile
   const name = profile
     ? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim()
@@ -44,7 +53,7 @@ export function generateLatexResume(resume: Resume): string {
     profile?.linkedin,
     profile?.website,
   ].filter(Boolean).map(v => e(v))
-  const contactLine = contactParts.join(' \\textbullet\\ ')
+  const contactLine = contactParts.join(' $\\cdot$ ')
 
   const sectionOrder = (resume.sectionOrder ?? []).filter(s => s.visible !== false)
   const positions = (resume.positions ?? [])
@@ -53,7 +62,6 @@ export function generateLatexResume(resume: Resume): string {
   const skills = (resume.skills ?? []).sort((a, b) => a.sortOrder - b.sortOrder)
   const education = (resume.education ?? []).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
   const projects = (resume.projects ?? []).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-
   const repositories = (resume.resumeRepositories ?? [])
     .filter(rr => !rr.hidden)
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -72,19 +80,30 @@ export function generateLatexResume(resume: Resume): string {
     .filter(Boolean)
     .join('\n')
 
-  return `\\documentclass[11pt,letterpaper]{article}
-\\usepackage[left=1.06cm,top=1.7cm,right=1.06cm,bottom=0.49cm]{geometry}
-\\usepackage[T1]{fontenc}
-\\usepackage[utf8]{inputenc}
-\\usepackage{mathpazo}
-\\usepackage{xcolor}
+  return `\\documentclass[10pt,letterpaper]{article}
+\\usepackage[top=0.5in,bottom=0.6in,left=0.75in,right=0.75in]{geometry}
+\\usepackage{fontspec}
+\\IfFontExistsTF{Georgia}{\\setmainfont{Georgia}}{%
+  \\IfFontExistsTF{Palatino Linotype}{\\setmainfont{Palatino Linotype}}{%
+    \\setmainfont{Latin Modern Roman}}}
 \\usepackage{hyperref}
 \\usepackage{enumitem}
+\\usepackage{xcolor}
 \\usepackage{microtype}
+\\usepackage{fancyhdr}
+
+% Miller palette
+\\definecolor{millerrule}{HTML}{dddddd}
+\\definecolor{millergray}{HTML}{555555}
 \\definecolor{linkblue}{HTML}{2563EB}
 \\hypersetup{colorlinks=true,urlcolor=linkblue,linkcolor=black,citecolor=black}
 
-\\pagestyle{empty}
+\\pagestyle{fancy}
+\\fancyhf{}
+\\renewcommand{\\headrulewidth}{0pt}
+\\renewcommand{\\footrulewidth}{0pt}
+\\fancyfoot[C]{\\small\\textit{\\thepage}}
+
 \\setlength{\\parindent}{0pt}
 \\setlength{\\parskip}{0pt}
 \\widowpenalty=10000
@@ -92,16 +111,11 @@ export function generateLatexResume(resume: Resume): string {
 
 \\begin{document}
 
-\\begin{center}
-  \\textbf{${e(name)}}\\\\
-  \\hrulefill
-\\end{center}
-
-\\begin{center}
-  ${contactLine}
-\\end{center}
-
-\\vspace{0.5pt}
+{\\centering
+  {\\Large\\bfseries ${e(name)}}\\par\\vspace{5pt}
+  {\\small\\color{millergray}${contactLine}}\\par
+}
+\\vspace{2pt}
 ${body}
 \\end{document}
 `
@@ -111,7 +125,7 @@ function renderSummary(resume: Resume): string {
   const summary = resume.profile?.summary
   if (!summary) return ''
   return `
-${section('Summary')}
+${millerSection('Summary')}
 ${htmlToLatex(summary)}
 `
 }
@@ -122,7 +136,7 @@ function renderSkills(skills: NonNullable<Resume['skills']>): string {
     .map(s => `\\textbf{${e(s.name)}:} ${parseSkills(s.skills).map(e).join(', ')}`)
     .join('\\\\\n')
   return `
-${section('Skills')}
+${millerSection('Skills')}
 ${lines}
 `
 }
@@ -138,13 +152,13 @@ function renderExperience(positions: NonNullable<Resume['positions']>): string {
       return listItems ?? [htmlToLatex(b.content)]
     }).filter(s => s.length > 0)
     const bulletList = allItems.length ? itemize(allItems) : ''
-    return `\\textbf{${e(p.company)}} \\hfill ${e(p.location ?? '')}\\\\
-\\textbf{${e(p.title ?? '')}} \\hfill ${formatDateRange(p.startDate, p.endDate, p.current)}
+    return `\\textbf{${e(p.company)}} \\hfill {\\color{millergray}${e(p.location ?? '')}}\\\\*
+\\textit{${e(p.title ?? '')}} \\hfill {\\color{millergray}${formatDateRange(p.startDate, p.endDate, p.current)}}
 ${bulletList}`
-  }).join('\n\\vspace{12pt}\n')
+  }).join('\n\\vspace{8pt}\n')
 
   return `
-${section('Experience')}
+${millerSection('Experience')}
 ${items}
 `
 }
@@ -153,12 +167,31 @@ function renderEducation(education: NonNullable<Resume['education']>): string {
   if (!education.length) return ''
   const items = education.map(edu => {
     const dateStr = formatDateRange(edu.startDate, edu.endDate, edu.current)
-    return `\\textbf{${e(edu.institution)}} \\hfill ${dateStr}\\\\
-${edu.degree ? `${e(edu.degree)}\\\\` : ''}`
-  }).join('\n\\vspace{12pt}\n')
+    return `\\textbf{${e(edu.institution)}} \\hfill {\\color{millergray}${dateStr}}\\\\*
+${edu.degree ? `\\textit{${e(edu.degree)}}` : ''}`
+  }).join('\n\\vspace{8pt}\n')
 
   return `
-${section('Education')}
+${millerSection('Education')}
+${items}
+`
+}
+
+function renderProjects(projects: NonNullable<Resume['projects']>): string {
+  if (!projects.length) return ''
+  const items = projects.map(p => {
+    const dateStr = formatDateRange(p.startDate, p.endDate, p.current)
+    const linkPart = p.link ? ` --- \\href{${escapeUrl(p.link)}}{${e(p.link)}}` : ''
+    const achievementItems = p.achievements ? extractListItems(p.achievements) : null
+    const achievementsLatex = achievementItems
+      ? itemize(achievementItems)
+      : (p.achievements ? htmlToLatex(p.achievements) : '')
+    return `\\textbf{${e(p.name)}}${linkPart} \\hfill {\\color{millergray}${dateStr}}\\\\*
+${achievementsLatex}`
+  }).join('\n\\vspace{8pt}\n')
+
+  return `
+${millerSection('Projects')}
 ${items}
 `
 }
@@ -173,33 +206,13 @@ function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): s
     if (rr.repository.stars > 0) metaParts.push(`$\\star$\\ ${rr.repository.stars}`)
     const meta = metaParts.join(', ')
     const url = `\\href{${escapeUrl(rr.repository.url)}}{${name}}`
-    const metaPart = meta ? ` \\hfill ${meta}` : ''
-    // \\* = forced line break that also prevents a page break here
+    const metaPart = meta ? ` \\hfill {\\color{millergray}${meta}}` : ''
     const descPart = desc ? `\\\\*\n${desc}` : ''
     return `\\noindent\\textbf{${url}}${metaPart}${descPart}\\par`
   }).join('\\vspace{4pt}\n')
 
   return `
-${section('Repositories')}
-${items}
-`
-}
-
-function renderProjects(projects: NonNullable<Resume['projects']>): string {
-  if (!projects.length) return ''
-  const items = projects.map(p => {
-    const dateStr = formatDateRange(p.startDate, p.endDate, p.current)
-    const linkPart = p.link ? ` --- \\href{${escapeUrl(p.link)}}{${e(p.link)}}` : ''
-    const achievementItems = p.achievements ? extractListItems(p.achievements) : null
-    const achievementsLatex = achievementItems
-      ? itemize(achievementItems)
-      : (p.achievements ? htmlToLatex(p.achievements) : '')
-    return `\\textbf{${e(p.name)}}${linkPart} \\hfill ${dateStr}\\\\
-${achievementsLatex}`
-  }).join('\n\\vspace{12pt}\n')
-
-  return `
-${section('Projects')}
+${millerSection('Repositories')}
 ${items}
 `
 }
