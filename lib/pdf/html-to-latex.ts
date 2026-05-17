@@ -1,4 +1,3 @@
-// @ts-expect-error no types
 import escapeLatex from 'escape-latex'
 
 export function stripTags(html: string): string {
