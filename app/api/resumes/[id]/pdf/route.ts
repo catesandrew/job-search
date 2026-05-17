@@ -3,6 +3,7 @@ import { getServerSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { generateResumePdf } from '@/lib/pdf/generate-pdf'
 import type { Resume, Position, Bullet, SkillCategory, Profile, Education, Project } from '@/hooks/use-resume'
+import type { Identity } from '@/hooks/use-identity'
 
 export async function GET(
   _request: NextRequest,
@@ -19,6 +20,7 @@ export async function GET(
     const resume = await prisma.resume.findUnique({
       where: { id },
       include: {
+        identity: true,
         profile: true,
         positions: {
           include: { bullets: { orderBy: { sortOrder: 'asc' } } },
@@ -58,6 +60,22 @@ export async function GET(
       score: resume.score,
       createdAt: resume.createdAt.toISOString(),
       updatedAt: resume.updatedAt.toISOString(),
+      identity: resume.identity
+        ? ({
+            id: resume.identity.id,
+            userId: resume.identity.userId,
+            label: resume.identity.label,
+            firstName: resume.identity.firstName,
+            lastName: resume.identity.lastName,
+            email: resume.identity.email,
+            phone: resume.identity.phone,
+            location: resume.identity.location,
+            linkedin: resume.identity.linkedin,
+            website: resume.identity.website,
+            createdAt: resume.identity.createdAt.toISOString(),
+            updatedAt: resume.identity.updatedAt.toISOString(),
+          } as Identity)
+        : null,
       profile: resume.profile
         ? ({
             id: resume.profile.id,
