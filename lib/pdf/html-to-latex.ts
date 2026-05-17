@@ -1,11 +1,8 @@
 import escapeLatex from 'escape-latex'
+import { escapeUrl } from './utils'
 
 export function stripTags(html: string): string {
   return html.replace(/<[^>]+>/g, '').trim()
-}
-
-function escapeUrl(url: string): string {
-  return url.replace(/%/g, '\\%').replace(/#/g, '\\#')
 }
 
 export function htmlToLatex(html: string): string {

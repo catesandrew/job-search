@@ -1,13 +1,10 @@
 import escapeLatex from 'escape-latex'
 import type { Resume } from '@/hooks/use-resume'
 import { htmlToLatex } from './html-to-latex'
+import { escapeUrl } from './utils'
 
 function e(s: string | null | undefined): string {
   return escapeLatex(s ?? '')
-}
-
-function escapeUrl(url: string): string {
-  return url.replace(/%/g, '\\%').replace(/#/g, '\\#')
 }
 
 function parseSkills(raw: string): string[] {
