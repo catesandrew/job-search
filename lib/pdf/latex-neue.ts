@@ -1,7 +1,7 @@
 import escapeLatex from 'escape-latex'
 import type { Resume } from '@/hooks/use-resume'
 import { htmlToLatex, extractListItems } from './html-to-latex'
-import { escapeUrl, formatPhone } from './utils'
+import { escapeUrl, formatPhone, displayUrl } from './utils'
 
 function e(s: string | null | undefined): string {
   return escapeLatex(s ?? '')
@@ -42,14 +42,15 @@ export function generateLatexNeueResume(resume: Resume): string {
     ? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim()
     : e(resume.title)
 
-  const contactParts = [
-    profile?.email,
-    formatPhone(profile?.phone),
-    profile?.location,
-    profile?.linkedin,
-    profile?.website,
-  ].filter(Boolean).map(v => e(v))
-  const contactLine = contactParts.join(' $\\cdot$ ')
+  const cdot = ' $\\cdot$ '
+  const neuPersonal = [profile?.email, formatPhone(profile?.phone), profile?.location]
+    .filter(Boolean).map(v => e(v)).join(cdot)
+  const neuSocial = [
+    profile?.linkedin ? displayUrl(profile.linkedin) : null,
+    profile?.website ? displayUrl(profile.website) : null,
+    profile?.github ? displayUrl(profile.github) : null,
+  ].filter(Boolean).map(v => e(v)).join(cdot)
+  const contactBlock = [neuPersonal, neuSocial].filter(Boolean).join('\\\\[1pt]\n')
 
   const sectionOrder = (resume.sectionOrder ?? []).filter(s => s.visible !== false)
   const positions = (resume.positions ?? [])
@@ -64,11 +65,11 @@ export function generateLatexNeueResume(resume: Resume): string {
 
   const sectionBodies: Record<string, string> = {
     summary: renderSummary(resume),
-    skills: renderSkills(skills),
+    skills: renderSkills(skills, resume.skillsFormat ?? 'labeled'),
     experience: renderExperience(positions),
     education: renderEducation(education),
     projects: renderProjects(projects),
-    repositories: renderRepositories(repositories),
+    repositories: renderRepositories(repositories, resume.repoLinks ?? true),
   }
 
   const body = sectionOrder
@@ -101,7 +102,7 @@ export function generateLatexNeueResume(resume: Resume): string {
 \\begin{document}
 
 {\\fontsize{22}{26}\\selectfont\\bfseries ${e(name)}}\\par\\vspace{2pt}
-{\\small\\color{neuetext}${contactLine}}\\par
+{\\small\\color{neuetext}${contactBlock}}\\par
 ${body}
 \\end{document}
 `
@@ -116,14 +117,20 @@ ${htmlToLatex(summary)}
 `
 }
 
-function renderSkills(skills: NonNullable<Resume['skills']>): string {
+function renderSkills(skills: NonNullable<Resume['skills']>, format = 'labeled'): string {
   if (!skills.length) return ''
-  const lines = skills
-    .map(s => `\\textbf{${e(s.name)}:} ${parseSkills(s.skills).map(e).join(', ')}`)
-    .join('\\\\\n')
+  let body: string
+  if (format === 'flat') {
+    body = skills.flatMap(s => parseSkills(s.skills)).map(e).join(', ')
+  } else {
+    const sep = format === 'inline' ? ' $\\cdot$ ' : ', '
+    body = skills
+      .map(s => `\\textbf{${e(s.name)}:} ${parseSkills(s.skills).map(e).join(sep)}`)
+      .join('\\\\\n')
+  }
   return `
 ${neueSection('Skills')}
-${lines}
+${body}
 `
 }
 
@@ -182,7 +189,7 @@ ${items}
 `
 }
 
-function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): string {
+function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>, repoLinks: boolean): string {
   if (!repos.length) return ''
   const items = repos.map(rr => {
     const name = e(rr.nameOverride ?? rr.repository.name)
@@ -191,14 +198,14 @@ function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): s
     if (rr.repository.language) metaParts.push(e(rr.repository.language))
     if (rr.repository.stars > 0) metaParts.push(`$\\star$\\ ${rr.repository.stars}`)
     const meta = metaParts.join(', ')
-    const url = `\\href{${escapeUrl(rr.repository.url)}}{${name}}`
+    const url = repoLinks ? `\\href{${escapeUrl(rr.repository.url)}}{${name}}` : name
     const metaPart = meta ? ` \\hfill {\\color{neuetext}${meta}}` : ''
     const descPart = desc ? `\\\\*\n{\\color{neuetext}${desc}}` : ''
     return `\\noindent\\textbf{${url}}${metaPart}${descPart}\\par`
   }).join('\\vspace{4pt}\n')
 
   return `
-${neueSection('Repositories')}
+${neueSection('Open Source')}
 ${items}
 `
 }

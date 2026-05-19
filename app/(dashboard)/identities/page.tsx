@@ -81,6 +81,7 @@ function NewIdentityCard({
     location: '',
     linkedin: '',
     website: '',
+    github: '',
   })
 
   const set = (key: keyof Identity) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -123,6 +124,10 @@ function NewIdentityCard({
         <div>
           <Label className="text-xs text-muted-foreground">Website</Label>
           <input value={form.website ?? ''} onChange={set('website')} className={underlineInput} />
+        </div>
+        <div className="col-span-2">
+          <Label className="text-xs text-muted-foreground">GitHub</Label>
+          <input value={form.github ?? ''} onChange={set('github')} className={underlineInput} />
         </div>
       </div>
       <div className="flex gap-2 mt-4 justify-end">
@@ -228,6 +233,10 @@ function IdentityCard({ identity }: { identity: Identity }) {
               <Label className="text-xs text-muted-foreground">Website</Label>
               <input value={form.website ?? ''} onChange={set('website')} className={underlineInput} />
             </div>
+            <div className="col-span-2">
+              <Label className="text-xs text-muted-foreground">GitHub</Label>
+              <input value={form.github ?? ''} onChange={set('github')} className={underlineInput} />
+            </div>
           </div>
           <div className="flex gap-2 mt-3 justify-end">
             <Button variant="ghost" size="sm" onClick={() => setEditing(false)}><X size={13} className="mr-1" />Cancel</Button>
@@ -242,6 +251,7 @@ function IdentityCard({ identity }: { identity: Identity }) {
           {identity.location && <p>{identity.location}</p>}
           {identity.linkedin && <p>{identity.linkedin}</p>}
           {identity.website && <p>{identity.website}</p>}
+          {identity.github && <p>{identity.github}</p>}
         </div>
       )}
     </div>

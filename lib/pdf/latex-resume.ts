@@ -1,7 +1,7 @@
 import escapeLatex from 'escape-latex'
 import type { Resume } from '@/hooks/use-resume'
 import { htmlToLatex, extractListItems } from './html-to-latex'
-import { escapeUrl, formatPhone } from './utils'
+import { escapeUrl, formatPhone, displayUrl } from './utils'
 
 function e(s: string | null | undefined): string {
   return escapeLatex(s ?? '')
@@ -25,7 +25,7 @@ function section(title: string): string {
   return `\\begin{center}\n  \\textbf{${title}}\n\\end{center}`
 }
 
-const ITEM_LIST = '[noitemsep, topsep=0pt, partopsep=0pt, parsep=0pt]'
+const ITEM_LIST = '[itemsep=6pt, topsep=2pt, partopsep=0pt, parsep=0pt]'
 
 function itemize(items: string[]): string {
   return `\\begin{itemize}${ITEM_LIST}\n${items.map(i => `  \\item ${i}`).join('\n')}\n\\end{itemize}`
@@ -37,14 +37,15 @@ export function generateLatexResume(resume: Resume): string {
     ? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim()
     : e(resume.title)
 
-  const contactParts = [
-    profile?.email,
-    formatPhone(profile?.phone),
-    profile?.location,
-    profile?.linkedin,
-    profile?.website,
-  ].filter(Boolean).map(v => e(v))
-  const contactLine = contactParts.join(' \\textbullet\\ ')
+  const sep = ' \\textbullet\\ '
+  const personalLine = [profile?.email, formatPhone(profile?.phone), profile?.location]
+    .filter(Boolean).map(v => e(v)).join(sep)
+  const socialLine = [
+    profile?.linkedin ? displayUrl(profile.linkedin) : null,
+    profile?.website ? displayUrl(profile.website) : null,
+    profile?.github ? displayUrl(profile.github) : null,
+  ].filter(Boolean).map(v => e(v)).join(sep)
+  const contactBlock = [personalLine, socialLine].filter(Boolean).join('\\\\\n  ')
 
   const sectionOrder = (resume.sectionOrder ?? []).filter(s => s.visible !== false)
   const positions = (resume.positions ?? [])
@@ -60,11 +61,11 @@ export function generateLatexResume(resume: Resume): string {
 
   const sectionBodies: Record<string, string> = {
     summary: renderSummary(resume),
-    skills: renderSkills(skills),
+    skills: renderSkills(skills, resume.skillsFormat ?? 'labeled'),
     experience: renderExperience(positions),
     education: renderEducation(education),
     projects: renderProjects(projects),
-    repositories: renderRepositories(repositories),
+    repositories: renderRepositories(repositories, resume.repoLinks ?? true),
   }
 
   const body = sectionOrder
@@ -98,7 +99,7 @@ export function generateLatexResume(resume: Resume): string {
 \\end{center}
 
 \\begin{center}
-  ${contactLine}
+  ${contactBlock}
 \\end{center}
 
 \\vspace{0.5pt}
@@ -112,18 +113,26 @@ function renderSummary(resume: Resume): string {
   if (!summary) return ''
   return `
 ${section('Summary')}
+\\begin{flushleft}
 ${htmlToLatex(summary)}
+\\end{flushleft}
 `
 }
 
-function renderSkills(skills: NonNullable<Resume['skills']>): string {
+function renderSkills(skills: NonNullable<Resume['skills']>, format = 'labeled'): string {
   if (!skills.length) return ''
-  const lines = skills
-    .map(s => `\\textbf{${e(s.name)}:} ${parseSkills(s.skills).map(e).join(', ')}`)
-    .join('\\\\\n')
+  let body: string
+  if (format === 'flat') {
+    body = skills.flatMap(s => parseSkills(s.skills)).map(e).join(', ')
+  } else {
+    const sep = format === 'inline' ? ' $\\cdot$ ' : ', '
+    body = skills
+      .map(s => `\\textbf{${e(s.name)}:} ${parseSkills(s.skills).map(e).join(sep)}`)
+      .join('\\\\\n')
+  }
   return `
 ${section('Skills')}
-${lines}
+${body}
 `
 }
 
@@ -163,7 +172,7 @@ ${items}
 `
 }
 
-function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): string {
+function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>, repoLinks: boolean): string {
   if (!repos.length) return ''
   const items = repos.map(rr => {
     const name = e(rr.nameOverride ?? rr.repository.name)
@@ -172,7 +181,7 @@ function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): s
     if (rr.repository.language) metaParts.push(e(rr.repository.language))
     if (rr.repository.stars > 0) metaParts.push(`$\\star$\\ ${rr.repository.stars}`)
     const meta = metaParts.join(', ')
-    const url = `\\href{${escapeUrl(rr.repository.url)}}{${name}}`
+    const url = repoLinks ? `\\href{${escapeUrl(rr.repository.url)}}{${name}}` : name
     const metaPart = meta ? ` \\hfill ${meta}` : ''
     // \\* = forced line break that also prevents a page break here
     const descPart = desc ? `\\\\*\n${desc}` : ''
@@ -180,7 +189,7 @@ function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): s
   }).join('\\vspace{4pt}\n')
 
   return `
-${section('Repositories')}
+${section('Open Source')}
 ${items}
 `
 }

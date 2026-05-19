@@ -55,6 +55,8 @@ export async function GET(
       fontFamily: resume.fontFamily,
       fontSize: resume.fontSize,
       lineHeight: resume.lineHeight,
+      skillsFormat: resume.skillsFormat,
+      repoLinks: resume.repoLinks,
       sectionTitleCasing: resume.sectionTitleCasing,
       dateFormat: resume.dateFormat,
       marginH: resume.marginH,
@@ -76,6 +78,7 @@ export async function GET(
             location: resume.identity.location,
             linkedin: resume.identity.linkedin,
             website: resume.identity.website,
+            github: resume.identity.github,
             createdAt: resume.identity.createdAt.toISOString(),
             updatedAt: resume.identity.updatedAt.toISOString(),
           } as Identity)
@@ -90,6 +93,7 @@ export async function GET(
             location: resume.profile.location,
             linkedin: resume.profile.linkedin,
             website: resume.profile.website,
+            github: resume.profile.github,
             targetTitle: resume.profile.targetTitle,
             summary: resume.profile.summary,
           } as Profile)

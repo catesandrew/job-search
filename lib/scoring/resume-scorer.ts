@@ -80,6 +80,12 @@ function metricNearStart(text: string): boolean {
   return hasMetric(words)
 }
 
+function extractYear(dateStr: string | null | undefined): number | null {
+  if (!dateStr) return null
+  const m = dateStr.match(/\d{4}/)
+  return m ? parseInt(m[0], 10) : null
+}
+
 // ── Scoring ───────────────────────────────────────────────────────────────────
 
 function computeScore(checks: CheckResult[]): number {
@@ -222,20 +228,38 @@ export function scoreResume(resume: Resume): ScoreResult {
 
   // ── Content Length ──────────────────────────────────────────────────────────
 
-  // 7. Bullets per position (2–5)
-  const positionsOutOfRange = visiblePositions.filter(p => {
+  // 7. Bullets per position (date-aware: recent roles 2–5, older roles 1–3)
+  const scoringYear = new Date().getFullYear()
+  const olderThreshold = scoringYear - 7
+  const recentFailing: typeof visiblePositions = []
+  const olderEmpty: typeof visiblePositions = []
+  const olderOver: typeof visiblePositions = []
+
+  for (const p of visiblePositions) {
     const count = (p.bullets ?? []).filter(b => !b.hidden).length
-    return count < 2 || count > 5
-  })
+    const endYear = extractYear(p.endDate)
+    const isRecent = p.current || endYear === null || endYear >= olderThreshold
+    if (isRecent) {
+      if (count < 2 || count > 5) recentFailing.push(p)
+    } else {
+      if (count === 0) olderEmpty.push(p)
+      else if (count > 3) olderOver.push(p)
+    }
+  }
+
+  const bulletStatus = recentFailing.length > 0 || olderEmpty.length > 0 ? 'fail'
+    : olderOver.length > 0 ? 'warn' : 'pass'
+  const bulletDetails: string[] = []
+  if (recentFailing.length > 0) bulletDetails.push(`${recentFailing.length} recent role(s) outside 2–5 bullets`)
+  if (olderEmpty.length > 0) bulletDetails.push(`${olderEmpty.length} older role(s) have no bullets`)
+  if (olderOver.length > 0) bulletDetails.push(`${olderOver.length} older role(s) have more than 3 bullets`)
   checks.push({
     id: 'achievementsPerPosition',
-    label: 'Bullets per position (2–5)',
+    label: 'Bullets per position',
     category: 'content_length',
-    status: positionsOutOfRange.length === 0 ? 'pass' : 'fail',
-    detail: positionsOutOfRange.length > 0
-      ? `${positionsOutOfRange.length} position(s) have fewer than 2 or more than 5 bullets`
-      : undefined,
-    recommendation: 'Keep 2–5 high-impact bullets per role so recruiters can scan quickly.',
+    status: bulletStatus,
+    detail: bulletDetails.length > 0 ? bulletDetails.join('; ') : undefined,
+    recommendation: 'Recent roles: 2–5 bullets. Roles 7+ years old: 1–3 tight supporting bullets.',
   })
 
   // 8. Total bullet count (3–20)

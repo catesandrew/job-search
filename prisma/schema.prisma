@@ -76,6 +76,7 @@ model Identity {
   location  String?
   linkedin  String?
   website   String?
+  github    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
@@ -92,6 +93,8 @@ model Resume {
   fontFamily          String          @default("Garamond")
   fontSize            String          @default("medium")
   lineHeight          String          @default("standard")
+  skillsFormat        String          @default("labeled")
+  repoLinks           Boolean         @default(true)
   sectionTitleCasing  String          @default("capitalized")
   dateFormat          String          @default("short")
   marginH             String          @default("standard")
@@ -128,6 +131,7 @@ model Profile {
   location    String?
   linkedin    String?
   website     String?
+  github      String?
   targetTitle String?
   summary     String?
   resume      Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)

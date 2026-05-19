@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       fontFamily: resume.fontFamily,
       fontSize: resume.fontSize,
       lineHeight: resume.lineHeight,
+      skillsFormat: resume.skillsFormat,
+      repoLinks: resume.repoLinks,
       sectionTitleCasing: resume.sectionTitleCasing,
       dateFormat: resume.dateFormat,
       marginH: resume.marginH,

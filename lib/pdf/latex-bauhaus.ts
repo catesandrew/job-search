@@ -57,6 +57,7 @@ export function generateLatexBauhausResume(resume: Resume): string {
     profile?.location,
     profile?.linkedin,
     profile?.website,
+    profile?.github,
   ].filter(Boolean) as string[]
 
   const sectionOrder = (resume.sectionOrder ?? []).filter(s => s.visible !== false)
@@ -76,7 +77,7 @@ export function generateLatexBauhausResume(resume: Resume): string {
     experience: renderExperience(positions),
     education: renderEducation(education),
     projects: renderProjects(projects),
-    repositories: renderRepositories(repositories),
+    repositories: renderRepositories(repositories, resume.repoLinks ?? true),
   }
 
   // Right column: all sections from sectionOrder except skills
@@ -87,7 +88,7 @@ export function generateLatexBauhausResume(resume: Resume): string {
     .join('\n')
 
   // Left column skills content
-  const leftSkills = renderLeftSkills(skills)
+  const leftSkills = renderLeftSkills(skills, resume.skillsFormat ?? 'labeled')
 
   // Left column contact lines
   const contactLines = contactParts
@@ -162,10 +163,17 @@ ${bauRightSection('Summary')}
 `
 }
 
-function renderLeftSkills(skills: NonNullable<Resume['skills']>): string {
+function renderLeftSkills(skills: NonNullable<Resume['skills']>, format = 'labeled'): string {
   if (!skills.length) return ''
+  if (format === 'flat') {
+    const all = skills.flatMap(s => parseSkills(s.skills)).map(e).join(', ')
+    return `
+${bauLeftSection('Skills')}
+{\\scriptsize\\color{bausidetext}${all}}\\par`
+  }
+  const sep = format === 'inline' ? ' $\\cdot$ ' : ', '
   return skills.map(s => {
-    const items = parseSkills(s.skills).map(e).join(', ')
+    const items = parseSkills(s.skills).map(e).join(sep)
     return `
 ${bauLeftSection(s.name)}
 {\\scriptsize\\color{bausidetext}${items}}\\par`
@@ -227,7 +235,7 @@ ${items}
 `
 }
 
-function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): string {
+function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>, repoLinks: boolean): string {
   if (!repos.length) return ''
   const items = repos.map(rr => {
     const name = e(rr.nameOverride ?? rr.repository.name)
@@ -236,14 +244,14 @@ function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): s
     if (rr.repository.language) metaParts.push(e(rr.repository.language))
     if (rr.repository.stars > 0) metaParts.push(`$\\star$\\ ${rr.repository.stars}`)
     const meta = metaParts.join(', ')
-    const url = `\\href{${escapeUrl(rr.repository.url)}}{${name}}`
+    const url = repoLinks ? `\\href{${escapeUrl(rr.repository.url)}}{${name}}` : name
     const metaPart = meta ? ` \\hfill {\\color{baugray}\\small ${meta}}` : ''
     const descPart = desc ? `\\\\*\n{\\small\\color{baugray}${desc}}` : ''
     return `\\noindent\\textbf{${url}}${metaPart}${descPart}\\par`
   }).join('\\vspace{4pt}\n')
 
   return `
-${bauRightSection('Repositories')}
+${bauRightSection('Open Source')}
 ${items}
 `
 }

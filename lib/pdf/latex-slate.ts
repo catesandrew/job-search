@@ -1,7 +1,7 @@
 import escapeLatex from 'escape-latex'
 import type { Resume } from '@/hooks/use-resume'
 import { htmlToLatex, extractListItems } from './html-to-latex'
-import { escapeUrl, formatPhone } from './utils'
+import { escapeUrl, formatPhone, displayUrl } from './utils'
 
 function e(s: string | null | undefined): string {
   return escapeLatex(s ?? '')
@@ -60,11 +60,11 @@ export function generateLatexSlateResume(resume: Resume): string {
 
   const sectionBodies: Record<string, string> = {
     summary: renderSummary(resume),
-    skills: renderSkills(skills),
+    skills: renderSkills(skills, resume.skillsFormat ?? 'labeled'),
     experience: renderExperience(positions),
     education: renderEducation(education),
     projects: renderProjects(projects),
-    repositories: renderRepositories(repositories),
+    repositories: renderRepositories(repositories, resume.repoLinks ?? true),
   }
 
   const body = sectionOrder
@@ -78,10 +78,13 @@ export function generateLatexSlateResume(resume: Resume): string {
     formatPhone(profile?.phone) ? e(formatPhone(profile?.phone)) : null,
     profile?.location ? e(profile.location) : null,
     profile?.linkedin
-      ? `\\href{${escapeUrl(profile.linkedin)}}{${e(profile.linkedin)}}`
+      ? `\\href{${escapeUrl(profile.linkedin)}}{${e(displayUrl(profile.linkedin))}}`
       : null,
     profile?.website
-      ? `\\href{${escapeUrl(profile.website)}}{${e(profile.website)}}`
+      ? `\\href{${escapeUrl(profile.website)}}{${e(displayUrl(profile.website))}}`
+      : null,
+    profile?.github
+      ? `\\href{${escapeUrl(profile.github)}}{${e(displayUrl(profile.github))}}`
       : null,
   ].filter(Boolean)
 
@@ -162,16 +165,21 @@ ${slateSection('Summary')}
 `
 }
 
-function renderSkills(skills: NonNullable<Resume['skills']>): string {
+function renderSkills(skills: NonNullable<Resume['skills']>, format = 'labeled'): string {
   if (!skills.length) return ''
-  const lines = skills
-    .map(s =>
-      `{\\color{slateaccent}\\bfseries ${e(s.name)}:} ${parseSkills(s.skills).map(e).join(', ')}`
-    )
-    .join('\\\\\n')
+  let body: string
+  if (format === 'flat') {
+    body = `{\\small ${skills.flatMap(s => parseSkills(s.skills)).map(e).join(', ')}}`
+  } else {
+    const sep = format === 'inline' ? ' $\\cdot$ ' : ', '
+    const lines = skills
+      .map(s => `{\\color{slateaccent}\\bfseries ${e(s.name)}:} ${parseSkills(s.skills).map(e).join(sep)}`)
+      .join('\\\\\n')
+    body = `{\\small ${lines}}`
+  }
   return `
 ${slateSection('Skills')}
-{\\small ${lines}}
+${body}
 `
 }
 
@@ -234,7 +242,7 @@ ${items}
 `
 }
 
-function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): string {
+function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>, repoLinks: boolean): string {
   if (!repos.length) return ''
   const items = repos.map(rr => {
     const name = e(rr.nameOverride ?? rr.repository.name)
@@ -243,14 +251,14 @@ function renderRepositories(repos: NonNullable<Resume['resumeRepositories']>): s
     if (rr.repository.language) metaParts.push(e(rr.repository.language))
     if (rr.repository.stars > 0) metaParts.push(`$\\star$\\ ${rr.repository.stars}`)
     const meta = metaParts.join(', ')
-    const url = `\\href{${escapeUrl(rr.repository.url)}}{${name}}`
+    const url = repoLinks ? `\\href{${escapeUrl(rr.repository.url)}}{${name}}` : name
     const metaPart = meta ? ` \\hfill {\\footnotesize\\color{slategray}${meta}}` : ''
     const descPart = desc ? `\\\\*\n{\\small\\color{slategray}${desc}}` : ''
     return `\\noindent{\\color{slateaccent}\\bfseries ${url}}${metaPart}${descPart}\\par`
   }).join('\\vspace{4pt}\n')
 
   return `
-${slateSection('Repositories')}
+${slateSection('Open Source')}
 ${items}
 `
 }

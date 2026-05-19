@@ -33,6 +33,7 @@ interface ProfileFormValues {
   phone: string
   linkedin: string
   website: string
+  github: string
 }
 
 export function GeneralTab({ resume }: GeneralTabProps) {
@@ -49,6 +50,7 @@ export function GeneralTab({ resume }: GeneralTabProps) {
       phone: resume.profile?.phone ?? '',
       linkedin: resume.profile?.linkedin ?? '',
       website: resume.profile?.website ?? '',
+      github: resume.profile?.github ?? '',
     },
   })
 
@@ -183,6 +185,10 @@ export function GeneralTab({ resume }: GeneralTabProps) {
               <Label className="text-xs text-muted-foreground">Website</Label>
               <input readOnly value={linked.website ?? ''} className={readonlyInput} />
             </div>
+            <div className="col-span-2">
+              <Label className="text-xs text-muted-foreground">GitHub</Label>
+              <input readOnly value={linked.github ?? ''} className={readonlyInput} />
+            </div>
           </div>
         ) : (
           <div key="contact-own" className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -201,6 +207,10 @@ export function GeneralTab({ resume }: GeneralTabProps) {
             <div>
               <Label className="text-xs text-muted-foreground">Website</Label>
               <input {...register('website')} onBlur={saveField} className={underlineInput} />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs text-muted-foreground">GitHub</Label>
+              <input {...register('github')} onBlur={saveField} className={underlineInput} />
             </div>
           </div>
         )}

@@ -31,8 +31,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Info, GripVertical, Eye, EyeOff, Lock } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 
 type Section = { name: string; visible: boolean; locked?: boolean }
+
+const SECTION_LABELS: Record<string, string> = { repositories: 'Open Source' }
 
 interface StyleLayoutTabProps {
   resume: Resume
@@ -71,7 +74,7 @@ function SortableSection({
           <GripVertical size={13} />
         </div>
       )}
-      <span className="flex-1 text-sm capitalize">{section.name}</span>
+      <span className="flex-1 text-sm capitalize">{SECTION_LABELS[section.name] ?? section.name}</span>
       <button
         type="button"
         onClick={onToggleVisibility}
@@ -176,6 +179,21 @@ export function StyleLayoutTab({ resume }: StyleLayoutTabProps) {
                 <SelectItem value="lowercase">Lowercase</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="col-span-2">
+            <Label className="text-xs text-muted-foreground">Skills Format</Label>
+            <Select value={resume.skillsFormat ?? 'labeled'} onValueChange={v => update({ skillsFormat: v })}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="labeled">Labeled — bold category + comma list</SelectItem>
+                <SelectItem value="inline">Inline — bold category · dot separated</SelectItem>
+                <SelectItem value="flat">Flat — all skills, no categories</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2 flex items-center justify-between py-1">
+            <Label className="text-xs text-muted-foreground">Open Source Hyperlinks</Label>
+            <Switch checked={resume.repoLinks ?? true} onCheckedChange={v => update({ repoLinks: v })} />
           </div>
           <div className="col-span-2">
             <Label className="text-xs text-muted-foreground">Date Format</Label>

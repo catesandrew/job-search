@@ -107,6 +107,7 @@ export interface Profile {
   location?: string | null
   linkedin?: string | null
   website?: string | null
+  github?: string | null
   targetTitle?: string | null
   summary?: string | null
 }
@@ -120,6 +121,8 @@ export interface Resume {
   fontFamily: string
   fontSize: string
   lineHeight: string
+  skillsFormat: string
+  repoLinks: boolean
   sectionTitleCasing: string
   dateFormat: string
   marginH: string

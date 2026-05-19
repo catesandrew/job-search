@@ -9,6 +9,8 @@ export const CreateResumeSchema = z.object({
   fontFamily: z.string().optional().default('Garamond'),
   fontSize: z.string().optional().default('medium'),
   lineHeight: z.string().optional().default('standard'),
+  skillsFormat: z.string().optional().default('labeled'),
+  repoLinks: z.boolean().optional().default(true),
   sectionTitleCasing: z.string().optional().default('capitalized'),
   dateFormat: z.string().optional().default('short'),
   marginH: z.string().optional().default('standard'),
@@ -30,6 +32,7 @@ export const ProfileSchema = z.object({
   location: z.string().optional().nullable(),
   linkedin: z.string().optional().nullable(),
   website: z.string().optional().nullable(),
+  github: z.string().optional().nullable(),
   targetTitle: z.string().optional().nullable(),
   summary: z.string().optional().nullable(),
 })
@@ -116,6 +119,7 @@ export const IdentitySchema = z.object({
   location: z.string().optional().nullable(),
   linkedin: z.string().optional().nullable(),
   website: z.string().optional().nullable(),
+  github: z.string().optional().nullable(),
 })
 
 export const UpdateIdentitySchema = IdentitySchema.partial()

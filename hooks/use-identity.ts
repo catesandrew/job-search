@@ -15,6 +15,7 @@ export interface Identity {
   location?: string | null
   linkedin?: string | null
   website?: string | null
+  github?: string | null
   createdAt: string
   updatedAt: string
   _count?: { resumes: number }

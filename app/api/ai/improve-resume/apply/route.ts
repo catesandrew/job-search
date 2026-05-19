@@ -91,6 +91,8 @@ export async function POST(req: NextRequest) {
       fontFamily: updated.fontFamily,
       fontSize: updated.fontSize,
       lineHeight: updated.lineHeight,
+      skillsFormat: updated.skillsFormat,
+      repoLinks: updated.repoLinks,
       sectionTitleCasing: updated.sectionTitleCasing,
       dateFormat: updated.dateFormat,
       marginH: updated.marginH,
